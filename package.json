@@ -1,0 +1,46 @@
+{
+  "name": "tableau-extension",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development vite --host",
+    "dev:http": "cross-env NODE_ENV=development vite --host",
+    "dev:https": "cross-env NODE_ENV=production vite --host",
+    "build": "tsc && vite build",
+    "build-extension": "npm run build && node scripts/build-trex.js",
+    "sign": "node scripts/sign-artifact.js extension.trex",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview --https",
+    "serve": "vite preview --https --port 443"
+  },
+  "dependencies": {
+    "@tableau/extensions-api-types": "^1.14.0",
+    "@tableau/tableau-ui": "^3.10.0",
+    "axios": "^1.11.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^12.1.5",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/react": "^16.14.44",
+    "@types/react-dom": "^16.9.18",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^1.0.4",
+    "adm-zip": "^0.5.10",
+    "cross-env": "^10.0.0",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^23.0.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8",
+    "vitest": "^1.0.4"
+  }
+}

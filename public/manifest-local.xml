@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest manifest-version="1.0" xmlns="http://www.tableau.com/xml/manifest">
+  <dashboard-extension id="tableau.extension.parameterized.report" extension-version="1.0.0">
+    <default-locale>en_US</default-locale>
+    <name resource-id="name"/>
+    <description resource-id="description"/>
+    <author name="Rahul Ram" email="rahul@rram.dev" organization="RRam" website="https://rram.dev"/>
+    <min-api-version>1.0</min-api-version>
+    <source-location>
+      <url>http://localhost:3000/</url>
+    </source-location>
+    <icon>assets/react.svg</icon>
+    <permissions>
+      <permission>full data</permission>
+    </permissions>
+    <context-menu>
+      <configure-context-menu-item />
+    </context-menu>
+  </dashboard-extension>
+  <resources>
+    <resource id="name">
+      <text locale="en_US">Parameterized Report Extension</text>
+    </resource>
+    <resource id="description">
+      <text locale="en_US">A dynamic Tableau extension for parameter selection and report refresh functionality with real-time data staleness monitoring.</text>
+    </resource>
+  </resources>
+</manifest>
