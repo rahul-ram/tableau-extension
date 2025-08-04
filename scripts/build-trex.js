@@ -40,7 +40,7 @@ const buildTrex = () => {
   }
   
   // Write the .trex file
-  const outputPath = path.join(__dirname, '../extension.trex');
+  const outputPath = path.join(__dirname, '../extension-fixed.trex');
   zip.writeZip(outputPath);
   console.log(`🎉 Successfully created extension.trex at ${outputPath}`);
   

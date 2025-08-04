@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { TextField, DropdownSelect } from '@tableau/tableau-ui';
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  Box,
+  Typography,
+  Divider,
+} from '@mui/material';
+import { Business, Assessment, TuneOutlined } from '@mui/icons-material';
 import axios from 'axios';
 import { API_HOSTNAME } from '../config';
 
@@ -88,70 +99,131 @@ const ParameterForm: React.FC<ParameterFormProps> = ({
   };
 
   return (
-    <div className="parameter-form">
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ color: 'white', display: 'block', marginBottom: '0.5rem' }}>Workspace</label>
-        <DropdownSelect
-          value={selectedWorkspace}
-          onChange={e => setSelectedWorkspace(e.target.value)}
-          label="Workspace"
-          style={{ backgroundColor: '#8cb3d9', width: '100%' }}
-        >
-          <option value="">Select a workspace</option>
-          {workspaces.map(ws => (
-            <option key={ws} value={ws}>{ws}</option>
-          ))}
-        </DropdownSelect>
-      </div>
+    <Box>
+      {/* Workspace and Report Selection */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Business color="primary" sx={{ mr: 1 }} />
+          <Typography variant="h6" color="primary">
+            Workspace & Report Selection
+          </Typography>
+        </Box>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ color: 'white', display: 'block', marginBottom: '0.5rem' }}>Report</label>
-        <DropdownSelect
-          value={selectedReport}
-          onChange={e => setSelectedReport(e.target.value)}
-          label="Report"
-          style={{ backgroundColor: '#8cb3d9', width: '100%' }}
-        >
-          <option value="">Select a report</option>
-          {reports.map(report => (
-            <option key={report} value={report}>{report}</option>
-          ))}
-        </DropdownSelect>
-      </div>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel id="workspace-label">Workspace</InputLabel>
+              <Select
+                labelId="workspace-label"
+                value={selectedWorkspace}
+                label="Workspace"
+                onChange={(e) => setSelectedWorkspace(e.target.value)}
+              >
+                <MenuItem value="">
+                  <em>Select a workspace</em>
+                </MenuItem>
+                {(workspaces || []).map((ws) => (
+                  <MenuItem key={ws} value={ws}>
+                    {ws}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-      {reportParams.map(param => (
-        <div key={param} style={{ marginBottom: '1rem' }}>
-          <TextField
-            label={param}
-            value={paramValues[param] || ''}
-            onChange={e => setParamValues({ ...paramValues, [param]: e.target.value })}
-            style={{ backgroundColor: '#8cb3d9', width: '100%' }}
-          />
-        </div>
-      ))}
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth disabled={!selectedWorkspace}>
+              <InputLabel id="report-label">Report</InputLabel>
+              <Select
+                labelId="report-label"
+                value={selectedReport}
+                label="Report"
+                onChange={(e) => setSelectedReport(e.target.value)}
+              >
+                <MenuItem value="">
+                  <em>Select a report</em>
+                </MenuItem>
+                {(reports || []).map((report) => (
+                  <MenuItem key={report} value={report}>
+                    {report}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+      </Box>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <TextField
-          label="COB Date From"
-          type="date"
-          value={cobDateFrom}
-          onChange={e => setCobDateFrom(formatDate(e.target.value))}
-          style={{ backgroundColor: '#8cb3d9', width: '100%' }}
-        />
-      </div>
+      {/* Report Parameters */}
+      {reportParams.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Divider sx={{ mb: 2 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <TuneOutlined color="primary" sx={{ mr: 1 }} />
+            <Typography variant="h6" color="primary">
+              Report Parameters
+            </Typography>
+          </Box>
 
-      {isRange && (
-        <div style={{ marginBottom: '1rem' }}>
-          <TextField
-            label="COB Date To"
-            type="date"
-            value={cobDateTo}
-            onChange={e => setCobDateTo(formatDate(e.target.value))}
-            style={{ backgroundColor: '#8cb3d9', width: '100%' }}
-          />
-        </div>
+          <Grid container spacing={2}>
+            {(reportParams || []).map((param) => (
+              <Grid item xs={12} md={6} key={param}>
+                <TextField
+                  fullWidth
+                  label={param}
+                  value={paramValues[param] || ''}
+                  onChange={(e) =>
+                    setParamValues({ ...paramValues, [param]: e.target.value })
+                  }
+                  variant="outlined"
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       )}
-    </div>
+
+      {/* Date Selection */}
+      <Box sx={{ mb: 2 }}>
+        <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Assessment color="primary" sx={{ mr: 1 }} />
+          <Typography variant="h6" color="primary">
+            Close of Business Date
+          </Typography>
+        </Box>
+
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={isRange ? 6 : 12}>
+            <TextField
+              fullWidth
+              label="COB Date From"
+              type="date"
+              value={cobDateFrom ? cobDateFrom.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') : ''}
+              onChange={(e) => setCobDateFrom(formatDate(e.target.value))}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Grid>
+
+          {isRange && (
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="COB Date To"
+                type="date"
+                value={cobDateTo ? cobDateTo.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') : ''}
+                onChange={(e) => setCobDateTo(formatDate(e.target.value))}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+          )}
+        </Grid>
+      </Box>
+    </Box>
   );
 };
 

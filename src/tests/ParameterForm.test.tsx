@@ -1,10 +1,20 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import axios from 'axios';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTableauTheme } from '../theme/tableauTheme';
 import ParameterForm from '../components/ParameterForm';
 
-const mockAxios = axios as jest.Mocked<typeof axios>;
+const mockAxios = axios as any;
+
+// Wrapper component to provide theme
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <ThemeProvider theme={createTableauTheme()}>
+    {children}
+  </ThemeProvider>
+);
 
 describe('ParameterForm', () => {
   const defaultProps = {
@@ -30,11 +40,12 @@ describe('ParameterForm', () => {
   });
 
   test('renders correctly with initial state', () => {
-    render(<ParameterForm {...defaultProps} />);
+    render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('Workspace')).toBeInTheDocument();
-    expect(screen.getByText('Report')).toBeInTheDocument();
-    expect(screen.getByLabelText('COB Date From')).toBeInTheDocument();
+    expect(screen.getByText('Workspace & Report Selection')).toBeInTheDocument();
+    expect(screen.getByText('Close of Business Date')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /workspace/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /report/i })).toBeInTheDocument();
   });
 
   test('fetches workspaces on mount', async () => {
@@ -42,7 +53,7 @@ describe('ParameterForm', () => {
       data: { workspaces: ['HISTSIM', 'FRTB', 'SANDBOX'] }
     });
 
-    render(<ParameterForm {...defaultProps} />);
+    render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(mockAxios.get).toHaveBeenCalledWith(
@@ -58,7 +69,7 @@ describe('ParameterForm', () => {
     });
 
     const props = { ...defaultProps, selectedWorkspace: 'HISTSIM' };
-    render(<ParameterForm {...props} />);
+    render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(mockAxios.get).toHaveBeenCalledWith(
@@ -74,7 +85,7 @@ describe('ParameterForm', () => {
     });
 
     const props = { ...defaultProps, selectedReport: 'TestReport' };
-    render(<ParameterForm {...props} />);
+    render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(mockAxios.get).toHaveBeenCalledWith(
@@ -91,24 +102,26 @@ describe('ParameterForm', () => {
       paramValues: { SNAPTYPE: 'EOD', RISKCLASS: 'EQUITY' }
     };
 
-    render(<ParameterForm {...props} />);
+    render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
+    expect(screen.getByText('Report Parameters')).toBeInTheDocument();
     expect(screen.getByDisplayValue('EOD')).toBeInTheDocument();
     expect(screen.getByDisplayValue('EQUITY')).toBeInTheDocument();
   });
 
   test('shows COB Date To field when isRange is true', () => {
     const props = { ...defaultProps, isRange: true };
-    render(<ParameterForm {...props} />);
+    render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
-    expect(screen.getByLabelText('COB Date To')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /cob date to/i })).toBeInTheDocument();
   });
 
   test('formats date correctly', async () => {
     const user = userEvent.setup();
-    render(<ParameterForm {...defaultProps} />);
+    render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
 
-    const dateInput = screen.getByLabelText('COB Date From');
+    const dateInput = screen.getByRole('textbox', { name: /cob date from/i });
+    await user.clear(dateInput);
     await user.type(dateInput, '2023-12-31');
 
     await waitFor(() => {
@@ -120,7 +133,7 @@ describe('ParameterForm', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     mockAxios.get.mockRejectedValueOnce(new Error('API Error'));
 
-    render(<ParameterForm {...defaultProps} />);
+    render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith('Error fetching workspaces:', expect.any(Error));

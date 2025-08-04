@@ -232,5 +232,22 @@ async def internal_error_handler(request, exc):
 
 if __name__ == "__main__":
     import uvicorn
+    import os
 
-    uvicorn.run("main:app", host="0.0.0.0", port=4173, reload=True, log_level="info")
+    # Check if running in HTTPS mode
+    use_https = os.getenv("USE_HTTPS", "false").lower() == "true"
+
+    if use_https:
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=4173,
+            ssl_keyfile="localhost+2-key.pem",
+            ssl_certfile="localhost+2.pem",
+            reload=True,
+            log_level="info",
+        )
+    else:
+        uvicorn.run(
+            "main:app", host="0.0.0.0", port=4173, reload=True, log_level="info"
+        )

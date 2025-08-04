@@ -1,1 +1,1 @@
-export const API_HOSTNAME = import.meta.env.VITE_API_HOSTNAME || 'http://localhost:4173';
+export const API_HOSTNAME = import.meta.env.VITE_API_HOSTNAME || 'https://localhost:4173';
