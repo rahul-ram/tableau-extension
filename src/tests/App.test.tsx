@@ -2,10 +2,21 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import axios from 'axios';
 import App from '../App';
+import * as apiService from '../api/apiService';
 
-const mockAxios = axios as any;
+// Mock the API service
+vi.mock('../api/apiService', () => ({
+  ApiService: {
+    getWorkspaces: vi.fn(),
+    getReports: vi.fn(),
+    getReportParams: vi.fn(),
+    checkDataStaleness: vi.fn(),
+    storeReportParams: vi.fn(),
+    createDataSource: vi.fn(),
+  },
+  withErrorHandling: vi.fn((fn) => fn()),
+}));
 
 describe('App', () => {
   beforeEach(() => {
@@ -60,7 +71,22 @@ describe('App', () => {
 
   test('handles submit with successful API calls', async () => {
     const user = userEvent.setup();
-    mockAxios.post.mockResolvedValue({ data: {} });
+    const mockStoreParams = vi.mocked(apiService.ApiService.storeReportParams);
+    const mockCreateDataSource = vi.mocked(apiService.ApiService.createDataSource);
+    
+    mockStoreParams.mockResolvedValue({ 
+      message: 'Success', 
+      userEmail: 'test@example.com', 
+      reportName: 'test', 
+      paramCount: 0 
+    });
+    mockCreateDataSource.mockResolvedValue({ 
+      message: 'Success', 
+      dataSourceName: 'test-ds', 
+      userEmail: 'test@example.com', 
+      reportName: 'test', 
+      status: 'ready' 
+    });
 
     render(<App />);
 
@@ -68,16 +94,23 @@ describe('App', () => {
     await user.click(submitButton);
 
     // Should show loading state
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText('Submitting...')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(mockAxios.post).toHaveBeenCalledTimes(2);
+      expect(mockStoreParams).toHaveBeenCalledTimes(1);
+      expect(mockCreateDataSource).toHaveBeenCalledTimes(1);
     });
   });
 
   test('disables submit button when loading', async () => {
     const user = userEvent.setup();
-    mockAxios.post.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ data: {} }), 100)));
+    const mockStoreParams = vi.mocked(apiService.ApiService.storeReportParams);
+    mockStoreParams.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ 
+      message: 'Success', 
+      userEmail: 'test@example.com', 
+      reportName: 'test', 
+      paramCount: 0 
+    }), 100)));
 
     render(<App />);
 
@@ -90,7 +123,8 @@ describe('App', () => {
   test('handles submit API errors gracefully', async () => {
     const user = userEvent.setup();
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    mockAxios.post.mockRejectedValueOnce(new Error('API Error'));
+    const mockStoreParams = vi.mocked(apiService.ApiService.storeReportParams);
+    mockStoreParams.mockRejectedValueOnce(new Error('API Error'));
 
     render(<App />);
 
@@ -98,7 +132,7 @@ describe('App', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error submitting:', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith('Error storing parameters:', expect.any(Error));
     });
 
     consoleSpy.mockRestore();

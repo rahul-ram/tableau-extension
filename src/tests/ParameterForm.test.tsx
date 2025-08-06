@@ -2,12 +2,20 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import axios from 'axios';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTableauTheme } from '../theme/tableauTheme';
 import ParameterForm from '../components/ParameterForm';
+import * as apiService from '../api/apiService';
 
-const mockAxios = axios as any;
+// Mock the API service
+vi.mock('../api/apiService', () => ({
+  ApiService: {
+    getWorkspaces: vi.fn(),
+    getReports: vi.fn(),
+    getReportParams: vi.fn(),
+  },
+  withErrorHandling: vi.fn((fn) => fn()),
+}));
 
 // Wrapper component to provide theme
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -42,69 +50,68 @@ describe('ParameterForm', () => {
   test('renders correctly with initial state', () => {
     render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('Workspace & Report Selection')).toBeInTheDocument();
-    expect(screen.getByText('Close of Business Date')).toBeInTheDocument();
+    expect(screen.getByText('Workspace & Report')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /workspace/i })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /report/i })).toBeInTheDocument();
   });
 
   test('fetches workspaces on mount', async () => {
-    mockAxios.get.mockResolvedValueOnce({
-      data: { workspaces: ['HISTSIM', 'FRTB', 'SANDBOX'] }
+    const mockGetWorkspaces = vi.mocked(apiService.ApiService.getWorkspaces);
+    mockGetWorkspaces.mockResolvedValueOnce({
+      workspaces: ['HISTSIM', 'FRTB', 'SANDBOX']
     });
 
     render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
 
     await waitFor(() => {
-      expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/reportsApi/getWorkspace'),
-        { params: { userEmail: 'test@example.com' } }
-      );
+      expect(mockGetWorkspaces).toHaveBeenCalledTimes(1);
     });
   });
 
   test('fetches reports when workspace is selected', async () => {
-    mockAxios.get.mockResolvedValueOnce({
-      data: { reports: ['Report1', 'Report2'] }
+    const mockGetReports = vi.mocked(apiService.ApiService.getReports);
+    mockGetReports.mockResolvedValueOnce({
+      reports: ['Report1', 'Report2']
     });
 
     const props = { ...defaultProps, selectedWorkspace: 'HISTSIM' };
     render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
     await waitFor(() => {
-      expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/reportsApi/getReports'),
-        { params: { userEmail: 'test@example.com', workspaceName: 'HISTSIM' } }
-      );
+      expect(mockGetReports).toHaveBeenCalledWith('HISTSIM');
     });
   });
 
   test('fetches report parameters when report is selected', async () => {
-    mockAxios.get.mockResolvedValueOnce({
-      data: { parameters: ['SNAPTYPE', 'RISKCLASS'] }
+    const mockGetReportParams = vi.mocked(apiService.ApiService.getReportParams);
+    mockGetReportParams.mockResolvedValueOnce({
+      parameters: [
+        { param_name: 'SNAPTYPE', data_type: 'string' },
+        { param_name: 'RISKCLASS', data_type: 'string' }
+      ]
     });
 
-    const props = { ...defaultProps, selectedReport: 'TestReport' };
+    const props = { ...defaultProps, selectedReport: 'TestReport', selectedWorkspace: 'TestWorkspace' };
     render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
     await waitFor(() => {
-      expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/reportsApi/getReportParams'),
-        { params: { reportName: 'TestReport' } }
-      );
+      expect(mockGetReportParams).toHaveBeenCalledWith('TestWorkspace', 'TestReport');
     });
   });
 
   test('renders parameter fields dynamically', () => {
     const props = {
       ...defaultProps,
-      reportParams: ['SNAPTYPE', 'RISKCLASS'],
+      reportParams: [
+        { param_name: 'SNAPTYPE', data_type: 'string' as const },
+        { param_name: 'RISKCLASS', data_type: 'string' as const }
+      ],
       paramValues: { SNAPTYPE: 'EOD', RISKCLASS: 'EQUITY' }
     };
 
     render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('Report Parameters')).toBeInTheDocument();
+    expect(screen.getByText('Parameters')).toBeInTheDocument();
     expect(screen.getByDisplayValue('EOD')).toBeInTheDocument();
     expect(screen.getByDisplayValue('EQUITY')).toBeInTheDocument();
   });
@@ -131,7 +138,8 @@ describe('ParameterForm', () => {
 
   test('handles API errors gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    mockAxios.get.mockRejectedValueOnce(new Error('API Error'));
+    const mockGetWorkspaces = vi.mocked(apiService.ApiService.getWorkspaces);
+    mockGetWorkspaces.mockRejectedValueOnce(new Error('API Error'));
 
     render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
 

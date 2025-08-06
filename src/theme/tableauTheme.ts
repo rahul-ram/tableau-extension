@@ -76,45 +76,57 @@ const tableauTheme: ThemeOptions = {
             'sans-serif',
         ].join(','),
         h1: {
-            fontSize: '2.125rem',
-            fontWeight: 500,
-            lineHeight: 1.2,
-        },
-        h2: {
-            fontSize: '1.75rem',
-            fontWeight: 500,
-            lineHeight: 1.3,
-        },
-        h3: {
             fontSize: '1.5rem',
             fontWeight: 500,
-            lineHeight: 1.4,
+            lineHeight: 1.2,
+            '@media (max-width:600px)': {
+                fontSize: '1.25rem',
+            },
         },
-        h4: {
+        h2: {
             fontSize: '1.25rem',
             fontWeight: 500,
+            lineHeight: 1.3,
+            '@media (max-width:600px)': {
+                fontSize: '1.125rem',
+            },
+        },
+        h3: {
+            fontSize: '1.125rem',
+            fontWeight: 500,
             lineHeight: 1.4,
+            '@media (max-width:600px)': {
+                fontSize: '1rem',
+            },
+        },
+        h4: {
+            fontSize: '1rem',
+            fontWeight: 500,
+            lineHeight: 1.4,
+            '@media (max-width:600px)': {
+                fontSize: '0.875rem',
+            },
         },
         h5: {
-            fontSize: '1.125rem',
+            fontSize: '0.875rem',
             fontWeight: 500,
             lineHeight: 1.5,
         },
         h6: {
-            fontSize: '1rem',
+            fontSize: '0.75rem',
             fontWeight: 500,
             lineHeight: 1.5,
         },
         body1: {
-            fontSize: '0.875rem',
+            fontSize: '0.75rem',
             lineHeight: 1.5,
         },
         body2: {
-            fontSize: '0.75rem',
+            fontSize: '0.6875rem',
             lineHeight: 1.4,
         },
         button: {
-            fontSize: '0.875rem',
+            fontSize: '0.75rem',
             fontWeight: 500,
             textTransform: 'none' as const,
         },
@@ -124,8 +136,9 @@ const tableauTheme: ThemeOptions = {
             styleOverrides: {
                 root: {
                     borderRadius: 4,
-                    padding: '8px 16px',
-                    minHeight: 36,
+                    padding: '6px 12px',
+                    minHeight: 28,
+                    fontSize: '0.75rem',
                     boxShadow: 'none',
                     '&:hover': {
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -197,7 +210,18 @@ const tableauTheme: ThemeOptions = {
         MuiFormControl: {
             styleOverrides: {
                 root: {
-                    marginBottom: '1rem',
+                    marginBottom: '0.5rem',
+                    '& .MuiInputBase-root': {
+                        height: '32px',
+                        fontSize: '0.75rem',
+                    },
+                    '& .MuiInputLabel-root': {
+                        fontSize: '0.75rem',
+                        transform: 'translate(14px, 8px) scale(1)',
+                        '&.MuiInputLabel-shrink': {
+                            transform: 'translate(14px, -6px) scale(0.75)',
+                        },
+                    },
                 },
             },
         },

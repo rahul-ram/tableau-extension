@@ -1,14 +1,13 @@
 import React from 'react';
 import {
   Box,
-  Typography,
+  IconButton,
+  Tooltip,
   Chip,
   CircularProgress,
-  Divider,
-  Button,
+  Fade,
 } from '@mui/material';
 import {
-  AccessTime,
   CheckCircle,
   Warning,
   Sync,
@@ -38,65 +37,88 @@ const StalenessIndicator: React.FC<StalenessIndicatorProps> = ({ status, checkSt
     }
   };
 
+  const getStatusText = () => {
+    if (!status) return 'Unknown Status';
+    return status.isStale ? 'Data Stale' : 'Data Current';
+  };
 
+  const getStatusColor = () => {
+    if (!status) return 'warning';
+    return status.isStale ? 'error' : 'success';
+  };
 
-  const getStatusIcon = (isStale: boolean) => {
-    return isStale ? <Warning /> : <CheckCircle />;
+  const getStatusIcon = () => {
+    if (!status) return <Warning />;
+    return status.isStale ? <Warning /> : <CheckCircle />;
+  };
+
+  const getTooltipText = () => {
+    const baseText = 'Check if there is a newer version of data for the selected report';
+    if (status) {
+      return `${baseText}\nLast updated: ${formatTimestamp(status.timestamp)}`;
+    }
+    return baseText;
   };
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Divider sx={{ mb: 2 }} />
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <AccessTime color="primary" sx={{ mr: 1 }} />
-          <Typography variant="h6" color="primary">
-            Data Status
-          </Typography>
-          {isChecking && (
-            <CircularProgress size={16} sx={{ ml: 1 }} />
-          )}
-        </Box>
-        <Button
-          variant="outlined"
+    <Box
+      sx={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '20px',
+        padding: '4px 8px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        border: '1px solid rgba(0,0,0,0.1)',
+      }}
+    >
+      <Fade in={!isChecking}>
+        <Chip
+          icon={getStatusIcon()}
+          label={getStatusText()}
+          color={getStatusColor() as any}
           size="small"
+          variant="filled"
+          sx={{
+            fontSize: '0.6875rem',
+            height: '24px',
+            '& .MuiChip-icon': {
+              fontSize: '14px',
+            },
+          }}
+        />
+      </Fade>
+
+      <Tooltip
+        title={getTooltipText()}
+        placement="bottom-end"
+        arrow
+      >
+        <IconButton
           onClick={handleCheckStaleness}
           disabled={isChecking}
-          startIcon={<Sync />}
+          size="small"
+          sx={{
+            width: 24,
+            height: 24,
+            '&:hover': {
+              backgroundColor: 'rgba(31, 119, 180, 0.1)',
+            },
+          }}
         >
-          Check Status
-        </Button>
-      </Box>
-
-      {status ? (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-          <Chip
-            icon={getStatusIcon(status.isStale)}
-            label={status.isStale ? 'Data Stale' : 'Data Fresh'}
-            color={status.isStale ? 'error' : 'success'}
-            variant="filled"
-          />
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Sync sx={{ mr: 0.5, fontSize: 16, color: 'text.secondary' }} />
-            <Typography variant="body2" color="text.secondary">
-              Last updated: {formatTimestamp(status.timestamp)}
-            </Typography>
-          </Box>
-        </Box>
-      ) : (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Chip
-            icon={<Warning />}
-            label="No data status available"
-            color="warning"
-            variant="outlined"
-          />
-        </Box>
-      )}
-
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-        Click "Check Status" to verify data freshness
-      </Typography>
+          {isChecking ? (
+            <CircularProgress size={14} />
+          ) : (
+            <Sync sx={{ fontSize: 14 }} />
+          )}
+        </IconButton>
+      </Tooltip>
     </Box>
   );
 };

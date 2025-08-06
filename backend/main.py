@@ -48,25 +48,48 @@ class ReportStatus(BaseModel):
 
 # Hardcoded data for development
 MOCK_DATA = {
-    "workspaces": ["HISTSIM", "FRTB", "SANDBOX", "MARKET_RISK", "CREDIT_RISK"],
+    "workspaces": ["WS_HS1", "WS_PVT", "WS_OFFICIAL"],
     "reports": {
-        "HISTSIM": ["HS_VaR", "HS_PORTFOLIO_PnL", "HS_RISK_FACTORS", "HS_SCENARIOS"],
-        "FRTB": ["FRTB_IMA_VaR", "FRTB_SBA_CHARGES", "FRTB_NMRF", "FRTB_DRC"],
-        "SANDBOX": ["TEST_REPORT_1", "TEST_REPORT_2", "VALIDATION_SUITE"],
-        "MARKET_RISK": ["MR_VaR_SUMMARY", "MR_STRESS_TESTS", "MR_BACKTESTING"],
-        "CREDIT_RISK": ["CR_PD_MODELS", "CR_LGD_ANALYSIS", "CR_EXPOSURE_CALC"],
+        "WS_HS1": ["report1", "report2", "report3"],
+        "WS_PVT": ["report4", "report6"],
+        "WS_OFFICIAL": ["report5", "report3", "report1"],
     },
     "report_params": {
-        "HS_VaR": ["SNAPTYPE", "RISKCLASS", "CURRENCY", "CONFIDENCE_LEVEL"],
-        "HS_PORTFOLIO_PnL": ["SNAPTYPE", "PORTFOLIO_ID", "CURRENCY"],
-        "HS_RISK_FACTORS": ["SNAPTYPE", "FACTOR_TYPE", "REGION"],
-        "HS_SCENARIOS": ["SNAPTYPE", "SCENARIO_TYPE", "STRESS_TYPE"],
-        "FRTB_IMA_VaR": ["SNAPTYPE", "DESK_ID", "JURISDICTION"],
-        "FRTB_SBA_CHARGES": ["SNAPTYPE", "ASSET_CLASS", "BUCKET"],
-        "TEST_REPORT_1": ["SNAPTYPE", "TEST_PARAM"],
-        "TEST_REPORT_2": ["SNAPTYPE", "ENVIRONMENT"],
-        "MR_VaR_SUMMARY": ["SNAPTYPE", "BUSINESS_LINE", "PORTFOLIO"],
-        "CR_PD_MODELS": ["SNAPTYPE", "RATING_SYSTEM", "SEGMENT"],
+        # Group A: report1, report3, report5
+        "report1": [
+            {"param_name": "snap_type", "data_type": "string"},
+            {"param_name": "riskclass", "data_type": "string"},
+            {"param_name": "offset", "data_type": "number"},
+            {"param_name": "cobdate", "data_type": "date"},
+        ],
+        "report3": [
+            {"param_name": "snap_type", "data_type": "string"},
+            {"param_name": "riskclass", "data_type": "string"},
+            {"param_name": "offset", "data_type": "number"},
+            {"param_name": "cobdate", "data_type": "date"},
+        ],
+        "report5": [
+            {"param_name": "snap_type", "data_type": "string"},
+            {"param_name": "riskclass", "data_type": "string"},
+            {"param_name": "offset", "data_type": "number"},
+            {"param_name": "cobdate", "data_type": "date"},
+        ],
+        # Group B: report2, report4, report6 - date range reports
+        "report2": [
+            {"param_name": "val_context", "data_type": "float"},
+            {"param_name": "cobdate_from", "data_type": "date"},
+            {"param_name": "cobdate_to", "data_type": "date"},
+        ],
+        "report4": [
+            {"param_name": "val_context", "data_type": "float"},
+            {"param_name": "cobdate_from", "data_type": "date"},
+            {"param_name": "cobdate_to", "data_type": "date"},
+        ],
+        "report6": [
+            {"param_name": "val_context", "data_type": "float"},
+            {"param_name": "cobdate_from", "data_type": "date"},
+            {"param_name": "cobdate_to", "data_type": "date"},
+        ],
     },
 }
 
@@ -80,12 +103,12 @@ async def root():
         "version": "1.0.0",
         "status": "running",
         "endpoints": {
-            "workspaces": "/reportsApi/getWorkspace",
-            "reports": "/reportsApi/getReports",
-            "parameters": "/reportsApi/getReportParams",
-            "staleness": "/reportsApi/checkDataStaleness",
-            "store_params": "/reportsApi/storeReportParams",
-            "create_datasource": "/reportsApi/createDataSource",
+            "workspaces": "/reports/workspaces",
+            "reports": "/reports/getReports",
+            "parameters": "/reports/getReportParams",
+            "staleness": "/reports/checkDataStaleness",
+            "store_params": "/reports/storeReportParams",
+            "create_datasource": "/reports/createDataSource",
             "docs": "/docs",
         },
     }
@@ -99,7 +122,7 @@ async def health_check():
 
 
 # Get workspaces for a user
-@app.get("/reportsApi/getWorkspace")
+@app.get("/reports/workspaces")
 async def get_workspaces():
     """Get available workspaces for a user"""
     # Simulate async processing
@@ -110,40 +133,42 @@ async def get_workspaces():
 
 
 # Get reports for a workspace
-@app.get("/reportsApi/getReports")
+@app.get("/reports/getReports")
 async def get_reports(
-    userEmail: str = Query(..., description="User email address"),
-    workspaceName: str = Query(..., description="Workspace name"),
+    workspace_name: str = Query(..., description="Workspace name"),
 ):
     """Get available reports for a workspace"""
     await asyncio.sleep(0.1)
 
-    if workspaceName not in MOCK_DATA["reports"]:
+    if workspace_name not in MOCK_DATA["reports"]:
         raise HTTPException(
-            status_code=404, detail=f"Workspace '{workspaceName}' not found"
+            status_code=404, detail=f"Workspace '{workspace_name}' not found"
         )
 
-    return {"reports": MOCK_DATA["reports"][workspaceName]}
+    return {"reports": MOCK_DATA["reports"][workspace_name]}
 
 
 # Get parameters for a report
-@app.get("/reportsApi/getReportParams")
-async def get_report_params(reportName: str = Query(..., description="Report name")):
+@app.get("/reports/getReportParams")
+async def get_report_params(
+    workspace_name: str = Query(..., description="Workspace name"),
+    report_name: str = Query(..., description="Report name"),
+):
     """Get required parameters for a report"""
     await asyncio.sleep(0.1)
 
-    if reportName not in MOCK_DATA["report_params"]:
-        raise HTTPException(status_code=404, detail=f"Report '{reportName}' not found")
+    if report_name not in MOCK_DATA["report_params"]:
+        raise HTTPException(status_code=404, detail=f"Report '{report_name}' not found")
 
-    return {"parameters": MOCK_DATA["report_params"][reportName]}
+    return {"parameters": MOCK_DATA["report_params"][report_name]}
 
 
 # Check data staleness
-@app.get("/reportsApi/checkDataStaleness")
+@app.get("/reports/checkDataStaleness")
 async def check_data_staleness(
     currentTimestamp: str = Query(..., description="Current timestamp in ISO format"),
-    reportName: str = Query(..., description="Report name"),
-    workspaceName: str = Query(..., description="Workspace name"),
+    report_name: str = Query(..., description="Report name"),
+    workspace_name: str = Query(..., description="Workspace name"),
     params: str = Query(..., description="JSON string of parameters"),
 ):
     """Check if report data is stale"""
@@ -178,7 +203,7 @@ async def check_data_staleness(
 
 
 # Store report parameters
-@app.post("/reportsApi/storeReportParams")
+@app.post("/reports/storeReportParams")
 async def store_report_params(
     report_params: ReportParams,
     userEmail: str = Query(..., description="User email address"),
@@ -198,7 +223,7 @@ async def store_report_params(
 
 
 # Create data source
-@app.post("/reportsApi/createDataSource")
+@app.post("/reports/createDataSource")
 async def create_data_source(request: DataSourceRequest):
     """Create a data source for the report"""
     await asyncio.sleep(0.3)
@@ -235,7 +260,7 @@ if __name__ == "__main__":
     import os
 
     # Check if running in HTTPS mode
-    use_https = os.getenv("USE_HTTPS", "false").lower() == "true"
+    use_https = os.getenv("USE_HTTPS", "dscs").lower() == "true"
 
     if use_https:
         uvicorn.run(
