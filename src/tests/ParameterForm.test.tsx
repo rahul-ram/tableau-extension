@@ -116,18 +116,30 @@ describe('ParameterForm', () => {
     expect(screen.getByDisplayValue('EQUITY')).toBeInTheDocument();
   });
 
-  test('shows COB Date To field when isRange is true', () => {
-    const props = { ...defaultProps, isRange: true };
+  test('shows COB Date To field when reportParams include date range', () => {
+    const props = {
+      ...defaultProps,
+      reportParams: [
+        { param_name: 'cobdate_from', data_type: 'date' as const },
+        { param_name: 'cobdate_to', data_type: 'date' as const }
+      ],
+      isRange: true
+    };
     render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
-    expect(screen.getByRole('textbox', { name: /cob date to/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/cob date from/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/cob date to/i)).toBeInTheDocument();
   });
 
   test('formats date correctly', async () => {
     const user = userEvent.setup();
-    render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
+    const props = {
+      ...defaultProps,
+      reportParams: [{ param_name: 'cobdate', data_type: 'date' as const }]
+    };
+    render(<ParameterForm {...props} />, { wrapper: TestWrapper });
 
-    const dateInput = screen.getByRole('textbox', { name: /cob date from/i });
+    const dateInput = screen.getByLabelText(/cob date/i);
     await user.clear(dateInput);
     await user.type(dateInput, '2023-12-31');
 
@@ -139,12 +151,16 @@ describe('ParameterForm', () => {
   test('handles API errors gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     const mockGetWorkspaces = vi.mocked(apiService.ApiService.getWorkspaces);
+    const mockWithErrorHandling = vi.mocked(apiService.withErrorHandling);
+
+    // Make the error handling wrapper return null (simulating error)
+    mockWithErrorHandling.mockResolvedValueOnce(null);
     mockGetWorkspaces.mockRejectedValueOnce(new Error('API Error'));
 
     render(<ParameterForm {...defaultProps} />, { wrapper: TestWrapper });
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error fetching workspaces:', expect.any(Error));
+      expect(mockWithErrorHandling).toHaveBeenCalled();
     });
 
     consoleSpy.mockRestore();

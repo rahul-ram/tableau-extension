@@ -19,16 +19,16 @@ const buildEndpoint = (path: string) => `${API_HOSTNAME}${path}`;
 export const API_ENDPOINTS = {
   // Workspace endpoints
   WORKSPACES: buildEndpoint(`${BASE_PATHS.REPORTS}/workspaces`),
-  
+
   // Report endpoints
   REPORTS: buildEndpoint(`${BASE_PATHS.REPORTS}/getReports`),
   REPORT_PARAMS: buildEndpoint(`${BASE_PATHS.REPORTS}/getReportParams`),
-  
+
   // Data management endpoints
   CHECK_STALENESS: buildEndpoint(`${BASE_PATHS.REPORTS}/checkDataStaleness`),
   STORE_PARAMS: buildEndpoint(`${BASE_PATHS.REPORTS}/storeReportParams`),
   CREATE_DATASOURCE: buildEndpoint(`${BASE_PATHS.REPORTS}/createDataSource`),
-  
+
   // Health and info endpoints
   ROOT: buildEndpoint('/'),
   HEALTH: buildEndpoint('/health'),
@@ -42,13 +42,13 @@ export const API_PARAMS = {
   workspaceParams: (workspaceName: string) => ({
     workspace_name: workspaceName,
   }),
-  
+
   // Report parameters
   reportParams: (workspaceName: string, reportName: string) => ({
     workspace_name: workspaceName,
     report_name: reportName,
   }),
-  
+
   // Staleness check parameters
   stalenessParams: (reportName: string, workspaceName: string, params: object) => ({
     currentTimestamp: new Date().toISOString(),
@@ -56,7 +56,7 @@ export const API_PARAMS = {
     workspace_name: workspaceName,
     params: JSON.stringify(params),
   }),
-  
+
   // User email parameter
   userEmailParams: (userEmail: string) => ({
     userEmail,
@@ -105,14 +105,16 @@ export interface CreateDataSourceResponse {
  * Helper function to add new endpoints easily
  */
 export const addCustomEndpoint = (path: string): string => {
-  return buildEndpoint(path);
+  // Ensure path starts with '/'
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return buildEndpoint(normalizedPath);
 };
 
 /**
  * Development helper to log all endpoints
  */
 export const logAllEndpoints = (): void => {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     console.log('📡 Available API Endpoints:', API_ENDPOINTS);
   }
 };

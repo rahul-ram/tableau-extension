@@ -210,16 +210,16 @@ const tableauTheme: ThemeOptions = {
         MuiFormControl: {
             styleOverrides: {
                 root: {
-                    marginBottom: '0.5rem',
+                    marginBottom: '1rem',
                     '& .MuiInputBase-root': {
-                        height: '32px',
-                        fontSize: '0.75rem',
+                        height: '40px', // Standard height for better label positioning
+                        fontSize: '0.875rem',
                     },
                     '& .MuiInputLabel-root': {
-                        fontSize: '0.75rem',
-                        transform: 'translate(14px, 8px) scale(1)',
+                        fontSize: '0.875rem',
+                        transform: 'translate(14px, 10px) scale(1)', // Proper vertical centering
                         '&.MuiInputLabel-shrink': {
-                            transform: 'translate(14px, -6px) scale(0.75)',
+                            transform: 'translate(14px, -9px) scale(0.75)', // Better shrunk position
                         },
                     },
                 },
@@ -231,8 +231,12 @@ const tableauTheme: ThemeOptions = {
                     color: '#374151',
                     fontSize: '0.875rem',
                     fontWeight: 500,
+                    lineHeight: 1,
                     '&.Mui-focused': {
                         color: tableauColors.primary.main,
+                    },
+                    '&.MuiInputLabel-shrink': {
+                        lineHeight: 1.2,
                     },
                 },
             },

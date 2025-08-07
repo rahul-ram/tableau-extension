@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  API_ENDPOINTS, 
-  API_PARAMS, 
-  addCustomEndpoint, 
+import {
+  API_ENDPOINTS,
+  API_PARAMS,
+  addCustomEndpoint,
   logAllEndpoints,
   type EndpointKey,
-  type EndpointValue 
+  type EndpointValue
 } from '../api/endpoints';
 
 describe('API Endpoints', () => {
@@ -55,7 +55,7 @@ describe('API Endpoints', () => {
     it('should generate correct staleness parameters', () => {
       const testParams = { snap_type: 'EOD', riskclass: 'EQUITY' };
       const params = API_PARAMS.stalenessParams('report1', 'WS_HS1', testParams);
-      
+
       expect(params).toMatchObject({
         report_name: 'report1',
         workspace_name: 'WS_HS1',
@@ -80,7 +80,7 @@ describe('API Endpoints', () => {
     it('should handle paths with and without leading slash', () => {
       const endpoint1 = addCustomEndpoint('/custom/path');
       const endpoint2 = addCustomEndpoint('custom/path');
-      
+
       expect(endpoint1).toMatch(/\/custom\/path$/);
       expect(endpoint2).toMatch(/\/custom\/path$/);
     });
@@ -88,31 +88,31 @@ describe('API Endpoints', () => {
 
   describe('logAllEndpoints', () => {
     it('should log endpoints in development mode', () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
-      
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+      const originalEnv = import.meta.env.DEV;
+      (import.meta.env as any).DEV = true;
+
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+
       logAllEndpoints();
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('📡 Available API Endpoints:', API_ENDPOINTS);
-      
+
       consoleSpy.mockRestore();
-      process.env.NODE_ENV = originalEnv;
+      (import.meta.env as any).DEV = originalEnv;
     });
 
     it('should not log endpoints in production mode', () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-      
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+      const originalEnv = import.meta.env.DEV;
+      (import.meta.env as any).DEV = false;
+
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+
       logAllEndpoints();
-      
+
       expect(consoleSpy).not.toHaveBeenCalled();
-      
+
       consoleSpy.mockRestore();
-      process.env.NODE_ENV = originalEnv;
+      (import.meta.env as any).DEV = originalEnv;
     });
   });
 
@@ -149,8 +149,8 @@ describe('API Endpoints', () => {
         ]
       };
       expect(Array.isArray(response.parameters)).toBe(true);
-      expect(response.parameters.every(p => 
-        typeof p.param_name === 'string' && 
+      expect(response.parameters.every(p =>
+        typeof p.param_name === 'string' &&
         ['string', 'number', 'float', 'date'].includes(p.data_type)
       )).toBe(true);
     });

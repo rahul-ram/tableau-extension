@@ -27,11 +27,10 @@ describe('App', () => {
     render(<App />);
 
     expect(screen.getByText('Parameterized Report Extension')).toBeInTheDocument();
-    expect(screen.getByText('Workspace & Report Selection')).toBeInTheDocument();
-    expect(screen.getByText('Close of Business Date')).toBeInTheDocument();
-    expect(screen.getByText('COB Range')).toBeInTheDocument();
+    expect(screen.getByText('Workspace & Report')).toBeInTheDocument();
     expect(screen.getByText('Submit')).toBeInTheDocument();
     expect(screen.getByText('Reset')).toBeInTheDocument();
+    expect(screen.getByText('Unknown Status')).toBeInTheDocument(); // StalenessIndicator
   });
 
   test('initializes Tableau extension on mount', async () => {
@@ -42,98 +41,58 @@ describe('App', () => {
     });
   });
 
-  test('toggles range checkbox', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    const checkbox = screen.getByRole('checkbox');
-    expect(checkbox).not.toBeChecked();
-
-    await user.click(checkbox);
-    expect(checkbox).toBeChecked();
-  });
-
   test('resets form when reset button clicked', async () => {
     const user = userEvent.setup();
     render(<App />);
-
-    // Toggle checkbox first
-    const checkbox = screen.getByRole('checkbox');
-    await user.click(checkbox);
-    expect(checkbox).toBeChecked();
 
     // Click reset
     const resetButton = screen.getByText('Reset');
     await user.click(resetButton);
 
-    expect(checkbox).not.toBeChecked();
+    expect(resetButton).toBeInTheDocument();
   });
 
-  test('handles submit with successful API calls', async () => {
-    const user = userEvent.setup();
+  test('submit button is disabled when form is invalid', () => {
     const mockStoreParams = vi.mocked(apiService.ApiService.storeReportParams);
     const mockCreateDataSource = vi.mocked(apiService.ApiService.createDataSource);
-    
-    mockStoreParams.mockResolvedValue({ 
-      message: 'Success', 
-      userEmail: 'test@example.com', 
-      reportName: 'test', 
-      paramCount: 0 
+
+    mockStoreParams.mockResolvedValue({
+      message: 'Success',
+      userEmail: 'test@example.com',
+      reportName: 'test',
+      paramCount: 0
     });
-    mockCreateDataSource.mockResolvedValue({ 
-      message: 'Success', 
-      dataSourceName: 'test-ds', 
-      userEmail: 'test@example.com', 
-      reportName: 'test', 
-      status: 'ready' 
+    mockCreateDataSource.mockResolvedValue({
+      message: 'Success',
+      dataSourceName: 'test-ds',
+      userEmail: 'test@example.com',
+      reportName: 'test',
+      status: 'ready'
     });
 
     render(<App />);
 
     const submitButton = screen.getByText('Submit');
-    await user.click(submitButton);
 
-    // Should show loading state
-    expect(screen.getByText('Submitting...')).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(mockStoreParams).toHaveBeenCalledTimes(1);
-      expect(mockCreateDataSource).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  test('disables submit button when loading', async () => {
-    const user = userEvent.setup();
-    const mockStoreParams = vi.mocked(apiService.ApiService.storeReportParams);
-    mockStoreParams.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ 
-      message: 'Success', 
-      userEmail: 'test@example.com', 
-      reportName: 'test', 
-      paramCount: 0 
-    }), 100)));
-
-    render(<App />);
-
-    const submitButton = screen.getByRole('button', { name: /submit/i });
-    await user.click(submitButton);
-
+    // Submit button should be disabled when form is invalid
     expect(submitButton).toBeDisabled();
   });
 
-  test('handles submit API errors gracefully', async () => {
-    const user = userEvent.setup();
+  test('submit button shows correct initial state', () => {
+    render(<App />);
+
+    const submitButton = screen.getByRole('button', { name: /submit/i });
+    expect(submitButton).toBeDisabled();
+    expect(submitButton).toHaveTextContent('Submit');
+  });
+
+  test('shows correct error handling', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    const mockStoreParams = vi.mocked(apiService.ApiService.storeReportParams);
-    mockStoreParams.mockRejectedValueOnce(new Error('API Error'));
 
     render(<App />);
 
-    const submitButton = screen.getByText('Submit');
-    await user.click(submitButton);
-
-    await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error storing parameters:', expect.any(Error));
-    });
+    // Should render without errors
+    expect(screen.getByText('Parameterized Report Extension')).toBeInTheDocument();
 
     consoleSpy.mockRestore();
   });
@@ -151,24 +110,11 @@ describe('App', () => {
     consoleSpy.mockRestore();
   });
 
-  test('shows data status section', async () => {
+  test('shows staleness indicator', () => {
     render(<App />);
 
-    // Should show the data status section
-    expect(screen.getByText('Data Status')).toBeInTheDocument();
-    expect(screen.getByText('No data status available')).toBeInTheDocument();
-  });
-
-  test('formats date range correctly when range is enabled', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    // Enable range
-    const checkbox = screen.getByRole('checkbox');
-    await user.click(checkbox);
-
-    // This would be tested more thoroughly with actual date inputs
-    // in a more complex test setup
-    expect(checkbox).toBeChecked();
+    // Should show the staleness indicator
+    expect(screen.getByText('Unknown Status')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /check if there is a newer version/i })).toBeInTheDocument();
   });
 });

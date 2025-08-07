@@ -24,7 +24,7 @@ dist-ssr
 *.sw?
 *__pycache__
 env
-*coverage-*
+*coverage*
 
 # SSL certificates
 localhost*.pem
